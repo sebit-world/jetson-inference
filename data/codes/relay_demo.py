@@ -5,10 +5,7 @@ import serial.tools.list_ports as ls_ports
 
 def to_hex_cmd(pin, on):
     pin_base = int("A0", 16) + pin
-    if on:
-        return f'A0{"%0.2X" % pin}01{"%0.2X" % (pin_base + 1)}'
-    else:
-        return f'A0{"%0.2X" % pin}00{"%0.2X" % pin_base}'
+    return f'A0{"%0.2X" % pin}{"%0.2X" % int(on)}{"%0.2X" % (pin_base + int(on))}'
 
 
 def set_pin(device, pin, on, port=9600):
