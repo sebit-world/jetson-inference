@@ -7,12 +7,12 @@ import sys
 import serial
 import serial.tools.list_ports as ls_ports
 
+PERSON_CLASS_ID = 1
+
 
 def to_hex_cmd(pin, on):
-    if on:
-        return f'A0{"%0.2X" % pin}01A2'
-    else:
-        return f'A0{"%0.2X" % pin}00A1'
+    pin_base = int("A0", 16) + pin
+    return f'A0{"%0.2X" % pin}{"%0.2X" % int(on)}{"%0.2X" % (pin_base + int(on))}'
 
 
 def set_pin(device, pin, on, port=9600):
@@ -56,14 +56,14 @@ while True:
 	# detect objects in the image (with overlay)
 	detections = net.Detect(img, overlay=opt.overlay)
 
-	count = 0
+	ppl_count = 0
 	for detection in detections:
-	    if detection.ClassID == 1:
-	        count += 1
+	    if detection.ClassID == PERSON_CLASS_ID:
+	        ppl_count += 1
 
 	# render the image
 	output.Render(img)
-	if count >= 1:
+	if ppl_count >= 1:
 		for port in ports:
 			if port.location and not is_on:
 				set_pin(port.device, 1, on=True)
