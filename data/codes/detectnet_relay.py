@@ -11,13 +11,20 @@ PERSON_CLASS_ID = 1
 
 
 def to_hex_cmd(pin, on):
-    pin_base = int("A0", 16) + pin
-    return f'A0{"%0.2X" % pin}{"%0.2X" % int(on)}{"%0.2X" % (pin_base + int(on))}'
+	pin_base = int("A0", 16) + pin
+	return f'A0{"%0.2X" % pin}{"%0.2X" % int(on)}{"%0.2X" % (pin_base + int(on))}'
 
 
 def set_pin(device, pin, on, port=9600):
-    with serial.Serial(device, port) as ser:
-        ser.write(bytes.fromhex(to_hex_cmd(pin, on)))
+	with serial.Serial(device, port) as ser:
+		ser.write(bytes.fromhex(to_hex_cmd(pin, on)))
+
+
+def get_relay_device():
+	ports = ls_ports.comports()
+	for port in ports:
+		if port.location:
+			return port.device
 
 # parse the command line
 parser = argparse.ArgumentParser(description="Locate objects in a live camera stream using an object detection DNN.")
@@ -42,13 +49,10 @@ net = jetson.inference.detectNet(opt.network, sys.argv, opt.threshold)
 input = jetson.utils.videoSource(opt.input_URI, argv=sys.argv)
 output = jetson.utils.videoOutput(opt.output_URI, argv=sys.argv)
 
-# process frames until the user exits
-is_on=False
-ports = ls_ports.comports()
-for port in ports:
-	if port.location:
-		set_pin(port.device, 1, on=False)
+relay_device = get_relay_device()
+set_pin(relay_device, 1, on=False)
 
+# process frames until the user exits
 while True:
 	# capture the next image
 	img = input.Capture()
@@ -56,23 +60,19 @@ while True:
 	# detect objects in the image (with overlay)
 	detections = net.Detect(img, overlay=opt.overlay)
 
+	# render the image
+	output.Render(img)
+
 	ppl_count = 0
 	for detection in detections:
 	    if detection.ClassID == PERSON_CLASS_ID:
-	        ppl_count += 1
+		    ppl_count += 1
 
-	# render the image
-	output.Render(img)
 	if ppl_count >= 1:
-		for port in ports:
-			if port.location and not is_on:
-				set_pin(port.device, 1, on=True)
-				is_on = True
+		set_pin(relay_device, 1, on=True)
 	else:
-		for port in ports:
-			if port.location and is_on:
-				set_pin(port.device, 1, on=False)
-				is_on = False
+		set_pin(relay_device, 1, on=False)
+
 	# update the title bar
 	output.SetStatus("{:s} | Network {:.0f} FPS".format(opt.network, net.GetNetworkFPS()))
 
