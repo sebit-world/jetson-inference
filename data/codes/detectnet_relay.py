@@ -65,8 +65,8 @@ while True:
 
 	ppl_count = 0
 	for detection in detections:
-	    if detection.ClassID == PERSON_CLASS_ID:
-		    ppl_count += 1
+		if detection.ClassID == PERSON_CLASS_ID:
+			ppl_count += 1
 
 	if ppl_count >= 1:
 		set_pin(relay_device, 1, on=True)
