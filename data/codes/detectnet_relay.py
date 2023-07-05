@@ -67,10 +67,11 @@ while True:
     for detection in detections:
         if detection.ClassID == PERSON_CLASS_ID:
             ppl_count += 1
-        if ppl_count >= 1:
-            set_pin(relay_device, 1, on=True)
-        else:
-            set_pin(relay_device, 1, on=False)
+
+    if ppl_count >= 1:
+        set_pin(relay_device, 1, on=True)
+    else:
+        set_pin(relay_device, 1, on=False)
 
     # update the title bar
     output.SetStatus("{:s} | Network {:.0f} FPS".format(opt.network, net.GetNetworkFPS()))
