@@ -5,13 +5,13 @@ from base import PotentioMeter, Board, LED
 
 
 PIN = 0
-BUZZER_PIN = 6
+LED_PIN = 6
 PORT = "/dev/ttyUSB0"
 
 if __name__ == "__main__":
     with Board(port=PORT, start_iterator=True) as board:
         potentio_meter = PotentioMeter(board, PIN)
-        led = LED(board, BUZZER_PIN)
+        led = LED(board, LED_PIN)
         led.set_mode(pyfirmata.PWM)
         prev_value = None
         while 1:
